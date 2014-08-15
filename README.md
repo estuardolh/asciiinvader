@@ -1,7 +1,8 @@
 ASCIIinvader
 ============
 
-Javascript - invader game using @Bradshaw/ASCII-Warriors framework.
+Javascript - invader game using @Bradshaw 
+[/ASCII-Warriors](https://github.com/Bradshaw/ASCII-Warriors) framework.
 
 Check out this ugly 
 game 
