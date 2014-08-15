@@ -15,7 +15,7 @@ TO-DO
 - [x] ship movement using arrow keys
 - [ ] score panel
 - [ ] collition event
-- [ ] shot action
+- [x] shot action
 - [ ] generate & play sounds with javascript!
 - [ ] touch trigger movement
 - [ ] more art.

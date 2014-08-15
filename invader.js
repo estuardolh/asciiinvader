@@ -18,11 +18,64 @@ function StateMachineIsNow(){
 	}
 }
 
+function Bullet(){
+	this.x = 0;
+	this.y = 0;
+	this.w = 1;
+	this.h = 1;
+	
+	this.dx = 0;
+	this.dy = 0;
+	
+	this.index = 0;
+	
+	this.invisible = new StateMachineIsNow();
+	this.invisible.length = 70;
+	this.is_invisible = false;
+	
+	this.changecolor = new StateMachineIsNow();
+	this.changecolor.length = 10;
+	
+	this.draw_me = function(){
+		if( this.is_invisible == true ){
+			return;
+		}
+	
+		ascwar.setColour(255, 255, 0);
+		if( this.index == 0 ){
+			ascwar.text( this.x, this.y, "x", "#");
+		}else if( this.index == 1 ){
+			ascwar.text( this.x, this.y, "+", "#");
+		}
+		ascwar.setColour(0, 255, 0);
+	};
+	
+	this.update = function(){
+		if( this.is_invisible == true ){
+			return;
+		}else{
+			if( this.invisible.is_now() == true ){
+				this.is_invisible = true;
+				return;
+			}
+		}
+
+		if( this.index == 0 ){
+			this.index = 1;
+		}else{
+			this.index = 0;
+		}
+		
+		this.x += this.dx;
+		this.y += this.dy;
+	};
+}
+
 /*
  * x,y: X and Y position.
  * w, h: width and height.
  * draw_me(): draw and return none.
- * update(): update position.
+ * update(): update position and return none.
  */
 function Invader(){
 	this.x = 5;
@@ -61,6 +114,7 @@ function Invader(){
 			ascwar.text( this.x + 4, this.y - 1, "_", "#");
 		}
 	};
+	
 	this.update = function(){
 		if( this.status == this.STATUS_ALERT0 ){
 			this.y += 0.005;
@@ -87,10 +141,15 @@ function Ship(){
 	this.w = 6;
 	this.h = 4;
 	
+	this.dx = 0;
+	this.dy = 0;
 	this.index = 0;
 	
 	this.STATUS_OK = 0;
 	this.STATUS_WARNING = 1;
+	
+	this.bullets = [];
+	this.bullets_index = 0;
 	
 	this.status = 1;
 	this.powered = true;
@@ -127,17 +186,60 @@ function Ship(){
 			ascwar.text( this.x + 2, this.y - 3, "+", "#");
 		}
 		
+		this.bullets.forEach( function( entry ){
+			entry.draw_me();
+		} );
+		
 		//this.index ++;
+	};
+	
+	this.update = function(){
+	
+		// for each bullet: update
+		this.bullets.forEach( function( entry ){
+				entry.update();
+			});
+
+		this.x += this.dx;
+		this.y += this.dy;
+		
+		// more slow!
+		this.dx *= 0.99;
+		this.dy *= 0.99;
+	};
+	
+	this.shot = function(){
+		var bullet_dy = -0.3;
+	
+		var bullet = new Bullet();
+		bullet.x = this.x + this.w / 2 - 1;
+		bullet.y = this.y - this.h;
+		
+		bullet.dy = bullet_dy;
+	
+		this.bullets[ this.bullets_index ] = bullet;
+		this.bullets_index ++;
 	};
 }
 
 var KEY_UP = 38, KEY_DOWN = 40,
 	KEY_RIGHT = 39, KEY_LEFT = 37,
-	KEY_Z = 90, KEY_X = 88;;
+	KEY_Z = 90, KEY_X = 88;
 var key_down_code = -1;
+var key_pressed_code = -1;
+var key_up_code = -1;
 document.onkeydown = key_down;
 document.onkeyup = key_up;
+document.onkeypress = key_pressed;
 
+/*
+ * Handles key down event
+ */
+function key_pressed( event ){
+	event = event || window.event;
+	
+	key_pressed_code = event.keyCode;
+}
 /*
  * Handles key down event
  */
@@ -153,6 +255,9 @@ function key_up( event ){
 	event = event || window.event;
 	
 	key_down_code = -1;
+	key_pressed_code = -1;
+	
+	key_up_code = event.keyCode;
 }
 
 /*
@@ -165,7 +270,29 @@ function is_down( key_code ){
 	}else{
 		return false;
 	}
-}
+}	
+/*
+ * Return true if the key code( stored with key_pressed event )
+ * is equal to @key_code.
+ */
+function is_pressed( key_code ){
+	if( key_pressed_code == key_code ){
+		return true;
+	}else{
+		return false;
+	}
+}	
+/*
+ * Return true if the key code( stored with key_up event )
+ * is equal to @key_code.
+ */
+function is_up( key_code ){
+	var res = ( key_up_code == key_code );
+	
+	key_up_code = -1;
+	
+	return res;
+}	
 
 height = 40;
 width = 60;
@@ -176,11 +303,36 @@ var ship = new Ship();
 var invaders = [];
 var invaders_index = 0;
 
-
 var new_invader = new StateMachineIsNow();
 new_invader.length = 400;
 
+function proccess_collition(){
+	var collitions = 0;
+	
+	invaders.forEach( function( invader ){
+		ship.bullets.forEach( function( bullet ){
+			
+			if( bullet.x >= invader.x && bullet.x <= invader.x + invader.w 
+				&& bullet.y >= invader.y && bullet.y <= invader.y + invader.h ){
+				//invader.is_invisible = true;
+				
+				collitions ++;
+			}
+			
+			// console.log( "x =" + invader.x );
+		});
+	});
+	
+	return collitions;
+}
+
 ascwar.update = function(dt){
+
+	// update ship
+	ship.update();
+	
+	// proccess collition
+	proccess_collition();
 
 	// is time for a new invader ?
 	if( new_invader.is_now() == true ){
@@ -197,20 +349,26 @@ ascwar.update = function(dt){
 	});
 	
 	// keyboard actions
+	var ship_dx = 0.2;
+	var ship_dy = 0.08;
 	
 	if( is_down( KEY_UP ) ){
 		ship.powered = true;
-		ship.y -= 0.08;
+		ship.dy = - ship_dy;
 	}else{
 		ship.powered = false;
 	}
 	
 	if( is_down( KEY_DOWN ) ){
-		ship.y += 0.05;
+		ship.dy = ship_dy;
 	}else if( is_down( KEY_RIGHT ) ){
-		ship.x += 0.08;
+		ship.dx = ship_dx;
 	}else if( is_down( KEY_LEFT ) ){
-		ship.x -= 0.08;
+		ship.dx = - ship_dx;
+	}
+	
+	if( is_up( KEY_Z ) ){
+		ship.shot();
 	}
 }
 
