@@ -2,7 +2,10 @@ ASCIIinvader
 ============
 
 Javascript - invader game using [ASCII-Warriors](https://github.com/Bradshaw/ASCII-Warriors) framework.
-[Check out this ugly game](www.github.com)
+
+Check out this ugly 
+game 
+[here](https://rawgithub.com/estuardolh/asciiinvader/master/index.html)
 
 TO-DO
 -----
