@@ -83,47 +83,92 @@ function Invader(){
 	this.w = 6;
 	this.h = 4;
 	
-	this.index = 0;
+	this.dy = 0.005;
+	
+	// this.index = 0;
 	this.status = 0;
 	
 	this.STATUS_ALERT0 = 0;
 	this.STATUS_ALERT1 = 1;
-	this.STATUS_ALERT2 = 2;
+	this.STATUS_EXPLODE = 2;
 	
 	this.time_jump_x = new StateMachineIsNow();
 	this.time_jump_x.length = 30;
 	
+	this.time_dance = new StateMachineIsNow();
+	this.time_dance.length = 30;	
+	
 	this.jump_x = 1;
 	this.jump_dx = 2;
+	this.is_invisible = false;
+	
+	this.powered = false;
 	
 	this.draw_me = function(){
+		if( this.is_invisible == true ){
+			return;
+		}
 		ascwar.setColour(225, 0, 0);
-		if( this.index == this.STATUS_ALERT0 ){
+		if( this.status == this.STATUS_ALERT0 ){
 			// level 0
 			ascwar.text( this.x + 2, this.y, ":[", "#");
 			
 			// level 1
 			ascwar.text( this.x, this.y - 1, "\\", "#");
 			ascwar.text( this.x + 4, this.y - 1, "/", "#");
-		}else if( this.index == this.STATUS_ALERT1 ){
+		}else if( this.status == this.STATUS_ALERT1 ){
 			// level 0
 			ascwar.text( this.x + 2, this.y, ":[", "#");
 			
 			// level 1
 			ascwar.text( this.x, this.y - 1, "_", "#");
 			ascwar.text( this.x + 4, this.y - 1, "_", "#");
+		}else if( this.status == this.STATUS_EXPLODE ){
+			// level 0
+			ascwar.text( this.x + 1, this.y, "/|\\", "#");
+			
+			// level 1
+			ascwar.text( this.x, this.y - 1, "_\\|/_", "#");
 		}
 	};
 	
 	this.update = function(){
 		if( this.status == this.STATUS_ALERT0 ){
-			this.y += 0.005;
+			if( this.powered == false ){
+				var rand = Math.random();
+				if( rand < 0.4 ){
+					this.dy = rand;
+				}
+				
+				this.powered = true;
+			}
+			
+			this.y += this.dy;
 			
 			// is time to X jump ?
 			if( this.time_jump_x.is_now() == true ){
 				this.x += this.jump_dx * this.jump_x;
 				
 				this.jump_x *= -1;
+			}
+			
+			// dance now ?
+			if( this.time_dance.is_now() == true ){
+				this.status = this.STATUS_ALERT1;
+				
+				time_dance.length = 30;
+			}
+		}else if( this.status == this.STATUS_ALERT1 ){
+			// dance again
+			if( this.time_dance.is_now() == true ){
+				this.status = this.STATUS_ALERT0;
+				
+				time_dance.length = 10;
+			}
+		}else if( this.status == this.STATUS_EXPLODE ){
+			// nobody see you
+			if( this.time_dance.is_now() == true ){
+				this.is_invisible = true;
 			}
 		}
 	};
@@ -304,23 +349,50 @@ var invaders = [];
 var invaders_index = 0;
 
 var new_invader = new StateMachineIsNow();
-new_invader.length = 400;
+new_invader.length = 140;
 
-function proccess_collition(){
+var invaders_destroyed = 0;
+var ship_destroyed = false;
+
+function proccess_bullets_collition(){
 	var collitions = 0;
 	
 	invaders.forEach( function( invader ){
+		if( invader.is_invisible == true ){
+			return;
+		}
 		ship.bullets.forEach( function( bullet ){
+			
+			if( bullet.is_invisible == true ){
+				return;
+			}
 			
 			if( bullet.x >= invader.x && bullet.x <= invader.x + invader.w 
 				&& bullet.y >= invader.y && bullet.y <= invader.y + invader.h ){
-				//invader.is_invisible = true;
+				invader.status = invader.STATUS_EXPLODE;
 				
 				collitions ++;
 			}
-			
-			// console.log( "x =" + invader.x );
 		});
+	});
+	
+	return collitions;
+}
+
+function proccess_ship_collition(){
+	var collitions = 0;
+	
+	invaders.forEach( function( invader ){
+		if( invader.is_invisible == true ){
+			return;
+		}
+		
+		if( ship.x >= invader.x && ship.x <= invader.x + invader.w 
+			&& ship.y >= invader.y && ship.y <= invader.y + invader.h ){
+			invader.status = invader.STATUS_EXPLODE;
+			
+			collitions ++;
+		}
 	});
 	
 	return collitions;
@@ -328,12 +400,23 @@ function proccess_collition(){
 
 ascwar.update = function(dt){
 
+	if( ship_destroyed == true ){
+		// TO-DO: implement cool ending animation
+		
+		return;
+	}
+	
 	// update ship
 	ship.update();
 	
-	// proccess collition
-	proccess_collition();
-
+	// proccess bullets collition
+	invaders_destroyed += proccess_bullets_collition();
+	
+	// proccess ship collition
+	if( proccess_ship_collition() > 0 ){
+		ship_destroyed = true;
+	}
+	
 	// is time for a new invader ?
 	if( new_invader.is_now() == true ){
 		var invader = new Invader();
@@ -349,8 +432,8 @@ ascwar.update = function(dt){
 	});
 	
 	// keyboard actions
-	var ship_dx = 0.2;
-	var ship_dy = 0.08;
+	var ship_dx = 0.4;
+	var ship_dy = 0.2;
 	
 	if( is_down( KEY_UP ) ){
 		ship.powered = true;
