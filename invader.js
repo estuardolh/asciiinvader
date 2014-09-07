@@ -156,14 +156,14 @@ function Invader(){
 			if( this.time_dance.is_now() == true ){
 				this.status = this.STATUS_ALERT1;
 				
-				time_dance.length = 30;
+				this.time_dance.length = 30;
 			}
 		}else if( this.status == this.STATUS_ALERT1 ){
 			// dance again
 			if( this.time_dance.is_now() == true ){
 				this.status = this.STATUS_ALERT0;
 				
-				time_dance.length = 10;
+				this.time_dance.length = 10;
 			}
 		}else if( this.status == this.STATUS_EXPLODE ){
 			// nobody see you
