@@ -16,6 +16,6 @@ TO-DO
 - [x] score panel
 - [x] collition event
 - [x] shot action
-- [ ] generate & play sounds with javascript!
+- [x] generate & play sounds with javascript!
 - [ ] touch trigger movement
-- [ ] more art.
+- [x] more art.

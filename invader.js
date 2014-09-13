@@ -136,7 +136,7 @@ function Invader(){
 		if( this.status == this.STATUS_ALERT0 ){
 			if( this.powered == false ){
 				var rand = Math.random();
-				if( rand < 0.4 ){
+				if( rand < 0.5 ){
 					this.dy = rand;
 				}
 				
@@ -196,41 +196,53 @@ function Ship(){
 	this.bullets = [];
 	this.bullets_index = 0;
 	
-	this.status = 1;
+	this.status = this.STATUS_OK;
 	this.powered = true;
+	
+	this.restore_time = new StateMachineIsNow();
+	this.restore_time.length = 200;
 	
 	this.lifes = 4;
 	
 	this.draw_me = function(){
-		if( this.status == this.STATUS_OK ){
-			// same color
-		}else if( this.status == this.STATUS_WARNING ){
-			ascwar.setColour(225, 0, 0);
+	
+		// level 0
+		if( this.powered == true ){
+			ascwar.setColour(225, 255, 0);
+			ascwar.text( this.x + 1, this.y, "v", "#");
+			ascwar.text( this.x + 3, this.y, "v", "#");
 		}
 	
-		if( this.index == 0 ){
-			// level 0
-			if( this.powered == true ){
-				ascwar.setColour(225, 255, 0);
-				ascwar.text( this.x + 1, this.y, "v", "#");
-				ascwar.text( this.x + 3, this.y, "v", "#");
-				ascwar.setColour(225, 0, 0);
-			}
-		
-			// level 1
+		if( this.status == this.STATUS_OK ){
 			ascwar.setColour(0, 255, 255);
-			ascwar.text( this.x, this.y - 1, "/", "#");
-			ascwar.text( this.x + 1, this.y - 1, "_", "#");
-			ascwar.text( this.x + 2, this.y - 1, "||", "#");
-			ascwar.text( this.x + 3, this.y - 1, "_", "#");
-			ascwar.text( this.x + 4, this.y - 1, "\\", "#");
-			
-			// level 2
-			ascwar.text( this.x + 1, this.y - 2, "/|", "#");
-			ascwar.text( this.x + 3, this.y - 2, "\\", "#");
-			
-			// level 3
-			ascwar.text( this.x + 2, this.y - 3, "+", "#");
+		}else if( this.status == this.STATUS_WARNING ){
+			if( this.restore_time.is_now() == true ){
+				this.status = this.STATUS_OK;
+			}else{
+				if( this.restore_time.index % 15 < 5 ){
+					ascwar.setColour(0, 255, 255);
+				}else{
+					ascwar.setColour(0, 0, 0);
+				}
+			}
+		}
+		
+		// level 1
+		ascwar.text( this.x, this.y - 1, "/", "#");
+		ascwar.text( this.x + 1, this.y - 1, "_", "#");
+		ascwar.text( this.x + 2, this.y - 1, "||", "#");
+		ascwar.text( this.x + 3, this.y - 1, "_", "#");
+		ascwar.text( this.x + 4, this.y - 1, "\\", "#");
+		
+		// level 2
+		ascwar.text( this.x + 1, this.y - 2, "/|", "#");
+		ascwar.text( this.x + 3, this.y - 2, "\\", "#");
+		
+		// level 3
+		ascwar.text( this.x + 2, this.y - 3, "+", "#");	
+	
+		if( this.index == 0 ){
+			// nothing
 		}
 		
 		this.bullets.forEach( function( entry ){
@@ -271,7 +283,7 @@ function Ship(){
 
 var KEY_UP = 38, KEY_DOWN = 40,
 	KEY_RIGHT = 39, KEY_LEFT = 37,
-	KEY_Z = 90, KEY_X = 88;
+	KEY_Z = 90, KEY_X = 88, KEY_ENTER = 13;
 var key_down_code = -1;
 var key_pressed_code = -1;
 var key_up_code = -1;
@@ -301,9 +313,6 @@ function key_down( event ){
 function key_up( event ){
 	event = event || window.event;
 	
-	key_down_code = -1;
-	key_pressed_code = -1;
-	
 	key_up_code = event.keyCode;
 }
 
@@ -313,6 +322,7 @@ function key_up( event ){
  */
 function is_down( key_code ){
 	if( key_down_code == key_code ){
+		key_down_code = -1;
 		return true;
 	}else{
 		return false;
@@ -324,6 +334,7 @@ function is_down( key_code ){
  */
 function is_pressed( key_code ){
 	if( key_pressed_code == key_code ){
+		key_pressed_code = -1;
 		return true;
 	}else{
 		return false;
@@ -334,19 +345,22 @@ function is_pressed( key_code ){
  * is equal to @key_code.
  */
 function is_up( key_code ){
-	var res = ( key_up_code == key_code );
-	
-	key_up_code = -1;
-	
-	return res;
+	if( key_up_code == key_code ){
+		key_up_code = -1;
+		return true;
+	}else{
+		return false;
+	}
 }	
 
 height = 40;
 width = 60;
 
 var MARGIN_WIDTH = 2;
+var LIFES_INITIAL = 4;
 
 var ship = new Ship();
+ship.lifes = LIFES_INITIAL;
 var invaders = [];
 var invaders_index = 0;
 
@@ -356,11 +370,12 @@ new_invader.length = 140;
 var invaders_destroyed = 0;
 var ship_destroyed = false;
 
-
 var time_started = null;
 var destroyed = 0;
 var hearts = 0;
 var time = 0;
+
+var paused = true;
 
 function proccess_bullets_collition(){
 	var collitions = 0;
@@ -380,6 +395,9 @@ function proccess_bullets_collition(){
 				
 				if( invader.status != invader.STATUS_EXPLODE ){
 					invader.status = invader.STATUS_EXPLODE;
+					
+					var sound_machine = jsfxlib.createWaves(audio_hurt);
+					sound_machine.hurt.play();
 					
 					collitions ++;
 				}
@@ -412,9 +430,18 @@ function proccess_ship_collition(){
 }
 
 ascwar.update = function(dt){
-
+	
+	if( is_pressed( KEY_ENTER ) ){
+		var sound_machine = jsfxlib.createWaves(audio_pickup);
+		sound_machine.pickup.play();
+		paused = ! paused;
+	}
+	
 	if( ship_destroyed == true ){
-		// TO-DO: implement cool ending animation
+		return;
+	}
+	
+	if( paused == true ){
 		
 		return;
 	}
@@ -426,10 +453,25 @@ ascwar.update = function(dt){
 	invaders_destroyed += proccess_bullets_collition();
 	
 	// proccess ship collition
-	ship.lifes -= proccess_ship_collition();
+	var ship_collide = 0;
+	ship_collide = proccess_ship_collition();
+	if( ship_collide > 0 ){
+		ship.status = ship.STATUS_WARNING;
+		ship.lifes --;
+	}
 	
-	if( ship.lifes == 0 ){
+	if( ship.lifes == 0){
+		if( ship_destroyed == false ){
+			var sound_machine = jsfxlib.createWaves(audio_explosion);
+			sound_machine.explosion.play();
+		}
+	
 		ship_destroyed = true;
+	}else{
+		if( ship_collide > 0 ){
+			var sound_machine = jsfxlib.createWaves(audio_powerlow);
+			sound_machine.powerlow.play();
+		}
 	}
 	
 	// is time for a new invader ?
@@ -467,15 +509,36 @@ ascwar.update = function(dt){
 	
 	if( is_up( KEY_Z ) ){
 		ship.shot();
+		
+		var sound_machine = jsfxlib.createWaves(audio_shot);
+		sound_machine.shot.play();
 	}
 }
 
 ascwar.draw = function(dt){
+	if( ship_destroyed == true ){
+		// fill box!
+		ascwar.setNeutral("~")
+	}else if( paused == true ){
+		ascwar.setNeutral("0")
+	}else{
+		// normal
+		ascwar.setNeutral("1")
+	}
+
 	ascwar.setColour(0, 0, 0);
-	ascwar.setNeutral(" ")
 	ascwar.clearScreen();
 	ascwar.setColour(0, 255, 0);
 	ascwar.box(0,0,width,height,"+",'-','|');
+	
+	
+	if( paused == true ){
+		var msg_structure = "|----- ----- -----|";
+		var msg_paused = "PAUSED";
+		ascwar.text( width / 2  - msg_structure.length / 2 , height / 2 - 1 , msg_structure ,'#');
+		ascwar.text( width / 2  - msg_paused.length / 2 , height / 2 , msg_paused ,'#');
+		ascwar.text( width / 2  - msg_structure.length / 2 , height / 2 + 1, msg_structure ,'#');
+	}
 	
 	// draw ship
 	ship.draw_me();
@@ -487,9 +550,14 @@ ascwar.draw = function(dt){
 	
 	ascwar.setColour(255, 255, 255);
 	
+	// get zeros
+	var zeros = "0000000";
+	var score = zeros + invaders_destroyed;
+	score = score.substr( score.length - zeros.length, score.length );
+	
 	// level 1
 	ascwar.text(34, height-3 , "VEL X: "+parseFloat( ship.dx ).toFixed(2)+" Y: "+parseFloat( ship.dy ).toFixed(2),'#');
-	ascwar.text(4, height-3 , "SCORE: "+ invaders_destroyed ,'#');
+	ascwar.text(4, height-3 , "SCORE: "+ score ,'#');
 	
 	// level 0
 	ascwar.text(34, height-2 , "POS X: "+parseInt(ship.x)+"   Y: "+parseInt(ship.y),'#');
