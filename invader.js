@@ -199,6 +199,8 @@ function Ship(){
 	this.status = 1;
 	this.powered = true;
 	
+	this.lifes = 4;
+	
 	this.draw_me = function(){
 		if( this.status == this.STATUS_OK ){
 			// same color
@@ -219,12 +221,12 @@ function Ship(){
 			ascwar.setColour(0, 255, 255);
 			ascwar.text( this.x, this.y - 1, "/", "#");
 			ascwar.text( this.x + 1, this.y - 1, "_", "#");
-			ascwar.text( this.x + 2, this.y - 1, "_", "#");
+			ascwar.text( this.x + 2, this.y - 1, "||", "#");
 			ascwar.text( this.x + 3, this.y - 1, "_", "#");
 			ascwar.text( this.x + 4, this.y - 1, "\\", "#");
 			
 			// level 2
-			ascwar.text( this.x + 1, this.y - 2, "/", "#");
+			ascwar.text( this.x + 1, this.y - 2, "/|", "#");
 			ascwar.text( this.x + 3, this.y - 2, "\\", "#");
 			
 			// level 3
@@ -354,6 +356,12 @@ new_invader.length = 140;
 var invaders_destroyed = 0;
 var ship_destroyed = false;
 
+
+var time_started = null;
+var destroyed = 0;
+var hearts = 0;
+var time = 0;
+
 function proccess_bullets_collition(){
 	var collitions = 0;
 	
@@ -369,9 +377,12 @@ function proccess_bullets_collition(){
 			
 			if( bullet.x >= invader.x && bullet.x <= invader.x + invader.w 
 				&& bullet.y >= invader.y && bullet.y <= invader.y + invader.h ){
-				invader.status = invader.STATUS_EXPLODE;
 				
-				collitions ++;
+				if( invader.status != invader.STATUS_EXPLODE ){
+					invader.status = invader.STATUS_EXPLODE;
+					
+					collitions ++;
+				}
 			}
 		});
 	});
@@ -389,9 +400,11 @@ function proccess_ship_collition(){
 		
 		if( ship.x >= invader.x && ship.x <= invader.x + invader.w 
 			&& ship.y >= invader.y && ship.y <= invader.y + invader.h ){
-			invader.status = invader.STATUS_EXPLODE;
-			
-			collitions ++;
+			if( invader.status != invader.STATUS_EXPLODE ){
+				invader.status = invader.STATUS_EXPLODE;
+				
+				collitions ++;
+			}
 		}
 	});
 	
@@ -413,7 +426,9 @@ ascwar.update = function(dt){
 	invaders_destroyed += proccess_bullets_collition();
 	
 	// proccess ship collition
-	if( proccess_ship_collition() > 0 ){
+	ship.lifes -= proccess_ship_collition();
+	
+	if( ship.lifes == 0 ){
 		ship_destroyed = true;
 	}
 	
@@ -470,9 +485,27 @@ ascwar.draw = function(dt){
 		entry.draw_me();
 	});
 	
+	ascwar.setColour(255, 255, 255);
+	
+	// level 1
+	ascwar.text(34, height-3 , "VEL X: "+parseFloat( ship.dx ).toFixed(2)+" Y: "+parseFloat( ship.dy ).toFixed(2),'#');
+	ascwar.text(4, height-3 , "SCORE: "+ invaders_destroyed ,'#');
+	
+	// level 0
+	ascwar.text(34, height-2 , "POS X: "+parseInt(ship.x)+"   Y: "+parseInt(ship.y),'#');
+	
+	var count_lifes = ship.lifes;
+	var hearts = "";
+	
+	for( count_lifes ; count_lifes > 0 ; count_lifes -- ){
+		hearts = hearts.concat( "<3 " );
+	}
+	
+	ascwar.text(4, height-2 , "LIFES: " + hearts ,'#');
+	
 	ascwar.setColour(0, 255, 0);
 	var footer = "+ Ascii invaders +";
-	ascwar.text(width/2  - (footer.length)/2,height-1, footer,'#')
+	ascwar.text(width/2  - (footer.length)/2,height-1, footer,'#');
 }
 
 console.log("loaded");

@@ -13,7 +13,7 @@ TO-DO
 - [x] invaders :B
 - [x] ship
 - [x] ship movement using arrow keys
-- [ ] score panel
+- [x] score panel
 - [x] collition event
 - [x] shot action
 - [ ] generate & play sounds with javascript!
