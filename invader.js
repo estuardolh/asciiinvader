@@ -83,7 +83,7 @@ function Invader(){
 	this.w = 6;
 	this.h = 4;
 	
-	this.dy = 0.005;
+	this.dy = 0.45;
 	
 	// this.index = 0;
 	this.status = 0;
@@ -290,7 +290,10 @@ var key_up_code = -1;
 document.onkeydown = key_down;
 document.onkeyup = key_up;
 document.onkeypress = key_pressed;
-
+document.body.addEventListener('touchstart', function(e){
+		touch( e );
+	}, false);
+	
 /*
  * Handles key down event
  */
@@ -353,6 +356,22 @@ function is_up( key_code ){
 	}
 }	
 
+/*
+ * handle touch event
+ */
+function touch( event ){
+	var touchobj = event.changedTouches[0];
+	var posx = 0, posy = 0;
+	
+	// relative positions from displaybox div
+	posx = parseInt(touchobj.clientX - document.getElementById("display").getBoundingClientRect().left );
+	posy = parseInt(touchobj.clientY - document.getElementById("display").getBoundingClientRect().top );		
+
+	// TO-DO: touch logic here.
+
+	event.preventDefault();
+}
+
 height = 40;
 width = 60;
 
@@ -365,7 +384,7 @@ var invaders = [];
 var invaders_index = 0;
 
 var new_invader = new StateMachineIsNow();
-new_invader.length = 140;
+new_invader.length = 20;
 
 var invaders_destroyed = 0;
 var ship_destroyed = false;
@@ -489,22 +508,19 @@ ascwar.update = function(dt){
 	});
 	
 	// keyboard actions
-	var ship_dx = 0.4;
-	var ship_dy = 0.2;
-	
 	if( is_down( KEY_UP ) ){
 		ship.powered = true;
-		ship.dy = - ship_dy;
+		ship_move( TO_UP );
 	}else{
 		ship.powered = false;
 	}
 	
 	if( is_down( KEY_DOWN ) ){
-		ship.dy = ship_dy;
+		ship_move( TO_DOWN );
 	}else if( is_down( KEY_RIGHT ) ){
-		ship.dx = ship_dx;
+		ship_move( TO_RIGHT );
 	}else if( is_down( KEY_LEFT ) ){
-		ship.dx = - ship_dx;
+		ship_move( TO_LEFT );
 	}
 	
 	if( is_up( KEY_Z ) ){
@@ -512,6 +528,22 @@ ascwar.update = function(dt){
 		
 		var sound_machine = jsfxlib.createWaves(audio_shot);
 		sound_machine.shot.play();
+	}
+}
+
+var TO_UP = 0, TO_DOWN = 1, TO_LEFT = 2, TO_RIGHT = 3;
+function ship_move( to ){
+	var ship_dx = 0.65;
+	var ship_dy = 0.35;
+	
+	if( to == TO_UP ){
+		ship.dy = - ship_dy;
+	}else if( to == TO_DOWN ){
+		ship.dy = ship_dy;
+	}else if( to == TO_RIGHT ){
+		ship.dx = ship_dx;
+	}else if( to == TO_LEFT ){
+		ship.dx = - ship_dx;
 	}
 }
 
