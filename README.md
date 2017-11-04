@@ -4,8 +4,9 @@ ASCIIinvader
 Javascript - invader game using @Bradshaw 
 [/ASCII-Warriors](https://github.com/Bradshaw/ASCII-Warriors) framework.
 
-Check out this _ugly_ beauty game [here](https://rawgithub.com/estuardolh/asciiinvader/master/index.html)
+Enter=pause/continue, Arrows=move, z=shot
 
+Check out this _ugly_ beauty game [here](https://rawgithub.com/estuardolh/asciiinvader/master/index.html)
 
 ![alt asciiinvader](./asciiinvader.png)
 
