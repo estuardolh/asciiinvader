@@ -6,6 +6,9 @@ Javascript - invader game using @Bradshaw
 
 Check out this _ugly_ beauty game [here](https://rawgithub.com/estuardolh/asciiinvader/master/index.html)
 
+
+![alt asciiinvader](./asciiinvader.png)
+
 TO-DO
 -----
 - [x] invaders :B
@@ -15,7 +18,7 @@ TO-DO
 - [x] collition event
 - [x] shot action
 - [x] generate & play sounds with javascript!
-- [ ] touch trigger movement
 - [x] more art
+- [ ] touch trigger movement
 - [ ] opening
 - [ ] ending
