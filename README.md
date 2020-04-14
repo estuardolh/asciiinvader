@@ -1,25 +1,15 @@
-ASCIIinvader
-============
+# ASCIIinvader
 
-Javascript - invader game using @Bradshaw 
-[/ASCII-Warriors](https://github.com/Bradshaw/ASCII-Warriors) framework.
+```
+Keys        Action
+----        ---
+Enter       Pause / Continue
+Arrows      Move
+Z           Shot
+```
 
-Enter=pause/continue, Arrows=move, z=shot
+## Play it [here](https://rawgithub.com/estuardolh/asciiinvader/master/index.html)
 
-Check out this _ugly_ beauty game [here](https://rawgithub.com/estuardolh/asciiinvader/master/index.html)
+![alt asciiinvader](./ascii-invader.gif)
 
-![alt asciiinvader](./asciiinvader.png)
-
-TO-DO
------
-- [x] invaders :B
-- [x] ship
-- [x] ship movement using arrow keys
-- [x] score panel
-- [x] collition event
-- [x] shot action
-- [x] generate & play sounds with javascript!
-- [x] more art
-- [ ] touch trigger movement
-- [ ] opening
-- [ ] ending
+### Library at [/ASCII-Warriors](https://github.com/Bradshaw/ASCII-Warriors).
